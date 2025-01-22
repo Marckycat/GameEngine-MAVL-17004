@@ -23,18 +23,21 @@ int main ()
 	SearchAndSetResourceDir("resources");
 
 	// Load a texture from the resources directory
-	//Texture wabbit = LoadTexture("wabbit_alpha.png");
+	Texture wabbit = LoadTexture("wabbit_alpha.png");
 	
 	//Camera
 	Camera3D camera = { 0 };
-	camera.position = (Vector3){ 4.0f,0.0f,2.0f };
-	camera.target = (Vector3){ 0.0f,0.0f,0.0f };
-	camera.fovy = 45.0f;
+	camera.position = (Vector3){ 4,0,2 };
+	camera.target = (Vector3){ 0,0,0 };
+	camera.up = (Vector3){ 0,1,0 };
+	camera.fovy = 45;
 	camera.projection = CAMERA_PERSPECTIVE;
 
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
+		UpdateCamera(&camera, CAMERA_FREE);
+
 		// drawing
 		BeginDrawing();
 
@@ -46,12 +49,10 @@ int main ()
 
 		BeginMode3D(camera);
 		DrawCube((Vector3) { 0, 0, 0 }, 1, 1, 1, RED);
-		DrawGrid(10, 1.0f); // Agregar una cuadrícula para referencia
 		EndMode3D();
 
 		// draw our texture to the screen
 		//DrawTexture(wabbit, 400, 200, WHITE);
-		DrawText("Use W/S to move the camera", 10, 10, 20, WHITE); // Texto de ayuda
 
 		
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
@@ -60,7 +61,7 @@ int main ()
 
 	// cleanup
 	// unload our texture so it can be cleaned up
-	//UnloadTexture(wabbit);
+	UnloadTexture(wabbit);
 
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
