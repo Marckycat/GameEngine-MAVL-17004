@@ -46,15 +46,42 @@ void DebugLog(LogLevel level, const char* moduleTag, const char* format) {
 	va_list args;
 	va_start(args, format);
 
-	//Imprimir el nivel de verbosidad y el tag del modulo
-	fprintf(stderr, "[%s] [%s] ", LogLevelToString(level), moduleTag);
+    //Obtener la hora actual
+    time_t now = time(NULL);
+    struct tm* t = localtime(&now);
 
-    //Imprimir el mensaje formateado
-	vfprintf(stderr, format, args);
-	fprintf(stderr, "\n");
+    //Abrir el archivo de log en modo "append"
+	FILE* logFile = fopen("log.txt", "a");
+    if (!logFile) {
+		fprintf(stderr, "[ERROR] [DebugLog] No se pudo abrir el archivo de log\n");
+        return;
+    }
+
+    // Formatear la hora
+    char timeStr[20];
+    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", t);
+
+    // Imprimir en stderr
+    fprintf(stderr, "[%s] [%s] [%s] ", timeStr, LogLevelToString(level), moduleTag);
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+
+    // Escribir en el archivo de log
+    fprintf(logFile, "[%s] [%s] [%s] ", timeStr, LogLevelToString(level), moduleTag);
+    vfprintf(logFile, format, args);
+    fprintf(logFile, "\n");
+
+	////Imprimir el nivel de verbosidad y el tag del modulo 
+	//fprintf(stderr, "[%s] [%s] ", LogLevelToString(level), moduleTag);
+
+ //   //Imprimir el mensaje formateado
+	//vfprintf(stderr, format, args);
+	//fprintf(stderr, "\n");
+
+    //Cerrar el archivo
+	fclose(logFile);
 
 	va_end(args);
-
     fflush(stderr);  // Forzar la salida inmediata
 }
 
