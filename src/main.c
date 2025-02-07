@@ -18,6 +18,9 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include <stdbool.h>
 #include <ini.h>
 #include <time.h>
+
+#define AVATAR_URL "https://avatars.githubusercontent.com/u/116173416"
+#define AVATAR_FILE "avatar.png"
 //
 
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
@@ -169,8 +172,8 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
     rlSetTexture(0);
 }
 
-int main (int argc, char** argv)
-{
+int main (int argc, char** argv) {
+
     //Uso de DebugLog
     DebugLog(LOG_INFO, "Main", "Iniciando la aplicacion con %d argumentos", argc);
 
@@ -276,7 +279,6 @@ int main (int argc, char** argv)
 	// cleanup
 	// unload our texture so it can be cleaned up
 	UnloadTexture(wabbit);
-
     //Carga de modelo y textura
 	//UnloadModel(model);
 	//UnloadTexture(texture);
