@@ -14,6 +14,10 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 //
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <ini.h>
+#include <time.h>
 //
 
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
@@ -26,7 +30,7 @@ typedef enum {
     LOG_ERROR
 } LogLevel;
 
-//Funcion para convertir el nivel de verbosidad a una cadena
+//Funcion para convertir el nivel de verbosidad a una cadena 
 const char* LogLevelToString(LogLevel level) {
 	switch (level) {
 	case LOG_DEBUG: return "DEBUG";
@@ -37,8 +41,8 @@ const char* LogLevelToString(LogLevel level) {
 	}
 }
 
-//Implementacion de la funcion DebugLog
-void DebugLog(LogLevel level, const char* moduleTag, const char* format, ...) {
+//Implementacion de la funcion DebugLog y que escribe el archivo
+void DebugLog(LogLevel level, const char* moduleTag, const char* format) {
 	va_list args;
 	va_start(args, format);
 
@@ -54,6 +58,28 @@ void DebugLog(LogLevel level, const char* moduleTag, const char* format, ...) {
     fflush(stderr);  // Forzar la salida inmediata
 }
 
+typedef struct {
+	int resX;
+	int resY;
+	bool fullscreen;
+	//const char* modelPath;
+} Config;;
+
+int IniHandler(void* user, const char* section, const char* name, const char* value) {
+    Config* config = (Config*)user;
+
+    if (strcmp(name, "resX") == 0) config->resX = atoi(value);
+    else if (strcmp(name, "resY") == 0) config->resY = atoi(value);
+    else if (strcmp(name, "fullscreen") == 0) config->fullscreen = atoi(value);
+
+    return 1;
+}
+
+void LoadConfig(Config* config, const char* filename) {
+    if (ini_parse(filename, IniHandler, config) < 0) {
+        DebugLog(LOG_WARN, "Config", "Archivo %s no encontrado, usando valores por defecto.", filename);
+    }
+}
 
 void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float height, float length, Color color)
 {
@@ -119,17 +145,18 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
 int main (int argc, char** argv)
 {
     //Uso de DebugLog
-    printf("Antes de DebugLog\n");
     DebugLog(LOG_INFO, "Main", "Iniciando la aplicacion con %d argumentos", argc);
-    printf("Después de DebugLog\n");
+
+	Config config = { 640, 480, false };
+	LoadConfig(&config, "config.ini");
 
 	// Tell the window to use vsync and work on high DPI displays
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
     //Leer argumentos de CLI
-    int resX = 640;
+    /*int resX = 640;
     int resY = 480;
-    bool wantsfullScreen = false;
+    bool wantsfullScreen = false;*/
 
     //Ruta de Modelo 3D
 	//const char* modelPath = "Book.obj"; //Ruta por defecto
@@ -140,13 +167,16 @@ int main (int argc, char** argv)
             //Mostrar argumentos provistos
             fprintf(stderr, "arg %i : %s \n", i, argv[i]);
             if (strcmp(argv[i], "-resx") == 0) {
-                resX = atoi(argv[i + 1]);
+				config.resX = atoi(argv[i + 1]);
+                //resX = atoi(argv[i + 1]);
             }
             if (strcmp(argv[i], "-resy") == 0) {
-                resY = atoi(argv[i + 1]);
+                config.resY = atoi(argv[i + 1]);
+                //resY = atoi(argv[i + 1]);
             }
             if (strcmp(argv[i], "-fullscreen") == 0) {
-                wantsfullScreen = true;
+                config.fullscreen = true;
+                //wantsfullScreen = true;
             }
 
 			////Carga de modelo
@@ -157,8 +187,10 @@ int main (int argc, char** argv)
     }
 
 	// Create the window and OpenGL context
-	InitWindow(resX, resY, "Hello Raylib");
-    if (wantsfullScreen) ToggleFullscreen();
+	//InitWindow(resX, resY, "Hello Raylib");
+    InitWindow(config.resX, config.resY, "Hello Raylib");
+    //if (wantsfullScreen) ToggleFullscreen();
+    if (config.fullscreen) ToggleFullscreen();
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
@@ -192,7 +224,7 @@ int main (int argc, char** argv)
 		ClearBackground(LIGHTGRAY);
 
 		// draw some text using the default font
-		//DrawText("Hello Raylib", 200,200,20,WHITE);
+		DrawText("Configuracion Cargada", 200,200,20,DARKGRAY);
 
 		BeginMode3D(camera);
 		//DrawCube((Vector3) { 0, 0, 0 }, 1, 1, 1, RED);
