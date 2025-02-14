@@ -258,8 +258,9 @@ int main (int argc, char** argv) {
     std::vector<GameObject*> gameObjects;
 
     //GameObject* k = GameObject::Spawn({ 200,200 }, { 1,1 }, "coso");
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 10; i++) {
         GameObject* k = GameObject::Spawn({ 5.f * i, 5.f * i }, { 100, 5.f * i }, "coso");
+        k->enabled = i % 2 == 0;
         gameObjects.push_back(k);
 
     }
@@ -273,7 +274,8 @@ int main (int argc, char** argv) {
 
 	// Load a texture from the resources directory
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
-	Texture cubeTex = LoadTexture("Tile.png");
+	//Texture cubeTex = LoadTexture("Tile.png");
+    Texture cubeT = LoadTexture("Skeleton.png");
 
     //Textura del avatar
     Image avatar = LoadImage(AVATAR_FILE);
@@ -293,22 +295,24 @@ int main (int argc, char** argv) {
 	camera.fovy = 45;
 	camera.projection = CAMERA_PERSPECTIVE;
 
-    /*AudioManager::getInstance()->LoadBackgroundMusic("town.mp3");
-    AudioManager::getInstance()->PlayBGM();*/
-    InitAudioDevice();
+    //AudioManager::getInstance()->LoadBackgroundMusic("PowerfulMario.mp3");
+    AudioManager::getInstance()->LoadBackgroundMusic("Slider.mp3");
+    AudioManager::getInstance()->PlayBGM();
+    /*InitAudioDevice();
     Music m = LoadMusicStream("PowerfulMario.mp3");
-    PlayMusicStream(m);
+    PlayMusicStream(m);*/
 
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
-        //AudioManager::getInstance()->Update();
-        UpdateMusicStream(m);
+        AudioManager::getInstance()->Update();
+        //UpdateMusicStream(m);
         UpdateCamera(&camera, CAMERA_FREE);
 
         //Update our game Objects
 		for (int i = 0; i < gameObjects.size(); i++) {
-			gameObjects[i]->update();
+            if(gameObjects[i]->enabled)
+                gameObjects[i]->update();
 		}
 
 		// drawing
@@ -322,7 +326,8 @@ int main (int argc, char** argv) {
 
 		BeginMode3D(camera);
 		//DrawCube((Vector3) { 0, 0, 0 }, 1, 1, 1, RED);
-        DrawCubeTexture(cubeTex, { 0, 0, 0 }, 2, 2, 2, WHITE);
+        //DrawCubeTexture(cubeTex, { 0, 0, 0 }, 2, 2, 2, WHITE);
+        DrawCubeTexture(cubeT, { 0, 0, 0 }, 2, 2, 2, WHITE);
 
         //Dibuja el modelo y la posicion
 		//DrawModel(model, (Vector3) { 0, 0, 0 }, 1, WHITE);

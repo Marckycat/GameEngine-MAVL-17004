@@ -7,11 +7,14 @@ class GameObject {
 public:
 	GameObject();
 	~GameObject();
-	void init();
+	void init(); //o setup
 	void init(Vector2 pos, Vector2 vel);
 	void init(Vector2 pos, Vector2 vel, Color c);
 	void update();
 	void draw();
+
+	//Si se debe updeatear este objeto
+	bool enabled;
 
 	Vector2 position;
 	Vector2 velocity;
@@ -25,5 +28,6 @@ private:
 	std::string name;
 	static unsigned int nextId;
 
+	friend class GameObject;
 };
 
