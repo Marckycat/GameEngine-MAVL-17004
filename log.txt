@@ -1,0 +1,4 @@
+[2025-02-13 21:59:27] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-13 21:59:27] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-13 21:59:58] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-13 21:59:58] [ERROR] [Render] No se pudo cargar la textura: Tile.png

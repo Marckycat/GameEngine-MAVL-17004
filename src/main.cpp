@@ -11,8 +11,8 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "rlgl.h"
 #include <stdio.h>
 #include <iostream>
-#include <fstream>
-#include <curl/curl.h>
+//#include <fstream>
+//#include <curl/curl.h>
 
 #include "GameObject.h"
 #include "MemoryManager.h"
@@ -32,29 +32,13 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include <vector>
 
-size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
-{
-    std::ofstream* outFile = static_cast<std::ofstream*>(userp);
-	outFile->write(static_cast<char*>(contents), size * nmemb);
-	return size * nmemb;
-}
-
-//Funcion para descargar la imagen
-bool DownloadImage(const std::string& url, const std::string& filepath) {
-    CURL* curl = curl_easy_init();
-	if (!curl) {
-		DebugLog(L_ERROR, "DownloadImage", "Error al inicializar CURL");
-		return false;
-	}
-
-	std::ofstream file(filepath, std::ios::binary);
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
-    CURLcode res = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-
-    return (res == CURLE_OK);
+void DownloadAvatar() {
+    char command[512];
+    snprintf(command, sizeof(command), "curl -s -o %s %s", AVATAR_FILE, AVATAR_URL);
+    int result = system(command);
+    if (result != 0) {
+        printf("Error downloading avatar.\n");
+    }
 }
 
 //Definicion de niveles de verbosidad
@@ -210,10 +194,13 @@ int main (int argc, char** argv) {
     DebugLog(L_INFO, "Main", "Iniciando la aplicacion con %d argumentos", argc);
     DebugLog(L_ERROR, "Render", "No se pudo cargar la textura: %s", "Tile.png");
 
-    // Descargar la imagen del avatar
-    if (!DownloadImage(AVATAR_URL, AVATAR_FILE)) {
-        std::cerr << "Error descargando la imagen" << std::endl;
-        return 1;
+    // Descargar la imagen si no existe
+    FILE* file = fopen(AVATAR_FILE, "r");
+    if (!file) {
+        DownloadAvatar();
+    }
+    else {
+        fclose(file);
     }
 
 	Config config = { 640, 480, false };
@@ -287,7 +274,9 @@ int main (int argc, char** argv) {
 	Texture cubeTex = LoadTexture("Tile.png");
 
     //Textura del avatar
-    Texture2D avatar = LoadTexture(AVATAR_FILE);
+    Image avatar = LoadImage(AVATAR_FILE);
+    Texture2D avatarTexture = LoadTextureFromImage(avatar);
+    UnloadImage(avatar);
 
 	////Modelo 3D
 	//Model model = LoadModel(modelPath);
@@ -328,8 +317,8 @@ int main (int argc, char** argv) {
         //Dibuja el modelo y la posicion
 		//DrawModel(model, (Vector3) { 0, 0, 0 }, 1, WHITE);
         
-        // Dibujar marca de agua en la esquina inferior derecha
-        DrawTexture(avatar, GetScreenWidth() - avatar.width - 10, GetScreenHeight() - avatar.height - 10, WHITE);
+        // Dibujar la marca de agua en la esquina inferior derecha
+        DrawTexture(avatarTexture, GetScreenWidth() - avatarTexture.width - 10, GetScreenHeight() - avatarTexture.height - 10, WHITE);
 
 		DrawGrid(20, 1);
 
@@ -357,7 +346,7 @@ int main (int argc, char** argv) {
 	//UnloadModel(model);
 	//UnloadTexture(texture);
     //Carga del avatar
-    UnloadTexture(avatar);
+    UnloadTexture(avatarTexture);
      
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
