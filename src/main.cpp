@@ -10,6 +10,12 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "raylib.h"
 #include "rlgl.h"
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <curl/curl.h>
+
+#include "GameObject.h"
+#include "MemoryManager.h"
 
 //
 #include <stdarg.h>
@@ -24,28 +30,54 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 //
 
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+#include <vector>
+
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    std::ofstream* outFile = static_cast<std::ofstream*>(userp);
+	outFile->write(static_cast<char*>(contents), size * nmemb);
+	return size * nmemb;
+}
+
+//Funcion para descargar la imagen
+bool DownloadImage(const std::string& url, const std::string& filepath) {
+    CURL* curl = curl_easy_init();
+	if (!curl) {
+		DebugLog(L_ERROR, "DownloadImage", "Error al inicializar CURL");
+		return false;
+	}
+
+	std::ofstream file(filepath, std::ios::binary);
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    return (res == CURLE_OK);
+}
 
 //Definicion de niveles de verbosidad
-typedef enum {
-    LOG_DEBUG,
-    LOG_INFO,
-    LOG_WARN,
-    LOG_ERROR
-} LogLevel;
+enum LogLevel {
+    L_DEBUG,
+    L_INFO,
+    L_WARN,
+    L_ERROR
+};
 
 //Funcion para convertir el nivel de verbosidad a una cadena 
 const char* LogLevelToString(LogLevel level) {
 	switch (level) {
-	case LOG_DEBUG: return "DEBUG";
-	case LOG_INFO: return "INFO";
-	case LOG_WARN: return "WARN";
-	case LOG_ERROR: return "ERROR";
+	case L_DEBUG: return "DEBUG";
+	case L_INFO: return "INFO";
+	case L_WARN: return "WARN";
+	case L_ERROR: return "ERROR";
 	default: return "UNKNOWN";
 	}
 }
 
 //Implementacion de la funcion DebugLog y que escribe el archivo
-void DebugLog(LogLevel level, const char* moduleTag, const char* format) {
+void DebugLog(LogLevel level, const char* moduleTag, const char* format, ...) {
 	va_list args;
 	va_start(args, format);
 
@@ -107,7 +139,7 @@ int IniHandler(void* user, const char* section, const char* name, const char* va
 
 void LoadConfig(Config* config, const char* filename) {
     if (ini_parse(filename, IniHandler, config) < 0) {
-        DebugLog(LOG_WARN, "Config", "Archivo %s no encontrado, usando valores por defecto.", filename);
+        DebugLog(L_WARN, "Config", "Archivo %s no encontrado, usando valores por defecto.");
     }
 }
 
@@ -175,7 +207,14 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
 int main (int argc, char** argv) {
 
     //Uso de DebugLog
-    DebugLog(LOG_INFO, "Main", "Iniciando la aplicacion con %d argumentos", argc);
+    DebugLog(L_INFO, "Main", "Iniciando la aplicacion con %d argumentos", argc);
+    DebugLog(L_ERROR, "Render", "No se pudo cargar la textura: %s", "Tile.png");
+
+    // Descargar la imagen del avatar
+    if (!DownloadImage(AVATAR_URL, AVATAR_FILE)) {
+        std::cerr << "Error descargando la imagen" << std::endl;
+        return 1;
+    }
 
 	Config config = { 640, 480, false };
 	LoadConfig(&config, "config.ini");
@@ -219,6 +258,24 @@ int main (int argc, char** argv) {
 	// Create the window and OpenGL context
 	//InitWindow(resX, resY, "Hello Raylib");
     InitWindow(config.resX, config.resY, "Hello Raylib");
+
+    //Prueba de GameObject
+    /*GameObject* myObj = new GameObject();
+    myObj->init();
+    myObj->setVelocity({ 100, 100 });
+    GameObject* otro = new GameObject();
+    otro->init({ 100,100 }, { 1,1 }, BLUE);*/
+    //para iterar en todos los objetos
+    std::vector<GameObject*> gameObjects;
+
+    //GameObject* k = GameObject::Spawn({ 200,200 }, { 1,1 }, "coso");
+    for (int i = 0; i < 1000; i++) {
+        GameObject* k = GameObject::Spawn({ 5.f * i, 5.f * i }, { 100, 5.f * i }, "coso");
+        gameObjects.push_back(k);
+
+    }
+    MemoryManager::getInstance()->alloc(800 * 1024 * 1024);
+
     //if (wantsfullScreen) ToggleFullscreen();
     if (config.fullscreen) ToggleFullscreen();
 
@@ -229,6 +286,9 @@ int main (int argc, char** argv) {
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
 	Texture cubeTex = LoadTexture("Tile.png");
 
+    //Textura del avatar
+    Texture2D avatar = LoadTexture(AVATAR_FILE);
+
 	////Modelo 3D
 	//Model model = LoadModel(modelPath);
 	//Texture2D texture = LoadTexture("Tile.png");
@@ -236,9 +296,9 @@ int main (int argc, char** argv) {
 	
 	//Camera
 	Camera3D camera = { 0 };
-	camera.position = (Vector3){ 4,0,2 };
-	camera.target = (Vector3){ 0,0,0 };
-	camera.up = (Vector3){ 0,1,0 };
+	camera.position = { 4,0,2 };
+	camera.target = { 0,0,0 };
+	camera.up = { 0,1,0 };
 	camera.fovy = 45;
 	camera.projection = CAMERA_PERSPECTIVE;
 
@@ -246,6 +306,11 @@ int main (int argc, char** argv) {
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
 		UpdateCamera(&camera, CAMERA_FREE);
+
+        //Update our game Objects
+		for (int i = 0; i < gameObjects.size(); i++) {
+			gameObjects[i]->update();
+		}
 
 		// drawing
 		BeginDrawing();
@@ -258,11 +323,13 @@ int main (int argc, char** argv) {
 
 		BeginMode3D(camera);
 		//DrawCube((Vector3) { 0, 0, 0 }, 1, 1, 1, RED);
-        DrawCubeTexture(cubeTex, (Vector3) { 0, 0, 0 }, 2, 2, 2, WHITE);
+        DrawCubeTexture(cubeTex, { 0, 0, 0 }, 2, 2, 2, WHITE);
 
         //Dibuja el modelo y la posicion
 		//DrawModel(model, (Vector3) { 0, 0, 0 }, 1, WHITE);
-
+        
+        // Dibujar marca de agua en la esquina inferior derecha
+        DrawTexture(avatar, GetScreenWidth() - avatar.width - 10, GetScreenHeight() - avatar.height - 10, WHITE);
 
 		DrawGrid(20, 1);
 
@@ -271,7 +338,14 @@ int main (int argc, char** argv) {
 		// draw our texture to the screen
 		//DrawTexture(wabbit, 400, 200, WHITE);
 
-		
+		//Actualizar los GameObjects
+        //myObj->draw();
+        //otro->draw();
+        //Update our GameObjects
+        for (int i = 0; i < gameObjects.size(); i++) {
+			gameObjects[i]->draw();
+        }
+
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
 	}
@@ -282,6 +356,8 @@ int main (int argc, char** argv) {
     //Carga de modelo y textura
 	//UnloadModel(model);
 	//UnloadTexture(texture);
+    //Carga del avatar
+    UnloadTexture(avatar);
      
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
