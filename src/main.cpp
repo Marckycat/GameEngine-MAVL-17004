@@ -16,7 +16,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 
 #include "GameObject.h"
 #include "MemoryManager.h"
-
+#include "AudioManager.h"
 //
 #include <stdarg.h>
 #include <string.h>
@@ -246,6 +246,8 @@ int main (int argc, char** argv) {
 	//InitWindow(resX, resY, "Hello Raylib");
     InitWindow(config.resX, config.resY, "Hello Raylib");
 
+
+
     //Prueba de GameObject
     /*GameObject* myObj = new GameObject();
     myObj->init();
@@ -291,10 +293,18 @@ int main (int argc, char** argv) {
 	camera.fovy = 45;
 	camera.projection = CAMERA_PERSPECTIVE;
 
+    /*AudioManager::getInstance()->LoadBackgroundMusic("town.mp3");
+    AudioManager::getInstance()->PlayBGM();*/
+    InitAudioDevice();
+    Music m = LoadMusicStream("PowerfulMario.mp3");
+    PlayMusicStream(m);
+
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
-		UpdateCamera(&camera, CAMERA_FREE);
+        //AudioManager::getInstance()->Update();
+        UpdateMusicStream(m);
+        UpdateCamera(&camera, CAMERA_FREE);
 
         //Update our game Objects
 		for (int i = 0; i < gameObjects.size(); i++) {

@@ -2,3 +2,18 @@
 [2025-02-13 21:59:27] [ERROR] [Render] No se pudo cargar la textura: Tile.png
 [2025-02-13 21:59:58] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
 [2025-02-13 21:59:58] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-13 22:38:19] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-13 22:38:19] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-13 22:38:19] [WARN] [Config] Archivo (null) no encontrado, usando valores por defecto.
+[2025-02-13 22:38:56] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-13 22:38:56] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-13 22:38:56] [WARN] [Config] Archivo (null) no encontrado, usando valores por defecto.
+[2025-02-14 10:19:23] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-14 10:19:23] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-14 10:19:23] [WARN] [Config] Archivo (null) no encontrado, usando valores por defecto.
+[2025-02-14 13:49:54] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-14 13:49:54] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-14 13:49:54] [WARN] [Config] Archivo (null) no encontrado, usando valores por defecto.
+[2025-02-14 13:52:36] [INFO] [Main] Iniciando la aplicacion con 5 argumentos
+[2025-02-14 13:52:36] [ERROR] [Render] No se pudo cargar la textura: Tile.png
+[2025-02-14 13:52:36] [WARN] [Config] Archivo (null) no encontrado, usando valores por defecto.
