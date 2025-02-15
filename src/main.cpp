@@ -7,6 +7,8 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 
 */
 
+#include <chrono>
+
 #include "raylib.h"
 #include "rlgl.h"
 #include <stdio.h>
@@ -17,6 +19,9 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "GameObject.h"
 #include "MemoryManager.h"
 #include "AudioManager.h"
+#include "LabelComponent.h"
+#include "ConfigManager.h"
+#include "LogManager.h"
 //
 #include <stdarg.h>
 #include <string.h>
@@ -189,6 +194,12 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
 }
 
 int main (int argc, char** argv) {
+    //Pruebas del Component
+    auto now = std::chrono::system_clock::now();
+    auto nowc = std::chrono::system_clock::to_time_t(now);
+    char msg[100];
+    sprintf(msg, "Super Engine de Marco, %s", ctime(&nowc));
+    LOGI(msg, "main");
 
     //Uso de DebugLog
     DebugLog(L_INFO, "Main", "Iniciando la aplicacion con %d argumentos", argc);
@@ -244,8 +255,8 @@ int main (int argc, char** argv) {
 
 	// Create the window and OpenGL context
 	//InitWindow(resX, resY, "Hello Raylib");
-    InitWindow(config.resX, config.resY, "Hello Raylib");
-
+    //InitWindow(config.resX, config.resY, "Hello Raylib");
+    InitWindow(1280, 800, "HelloRaylib");
 
 
     //Prueba de GameObject
@@ -273,7 +284,7 @@ int main (int argc, char** argv) {
 	SearchAndSetResourceDir("resources");
 
 	// Load a texture from the resources directory
-	Texture wabbit = LoadTexture("wabbit_alpha.png");
+	//Texture wabbit = LoadTexture("wabbit_alpha.png");
 	//Texture cubeTex = LoadTexture("Tile.png");
     Texture cubeT = LoadTexture("Skeleton.png");
 
@@ -295,6 +306,20 @@ int main (int argc, char** argv) {
 	camera.fovy = 45;
 	camera.projection = CAMERA_PERSPECTIVE;
 
+    //
+    GameObject* go = new GameObject();
+    ptrComponent newComp = std::make_shared<LabelComponent>();
+    go->AddComponent(newComp);
+
+    std::vector<GameObject*> gameobjects;
+    for (int i = 0; i < 100; i++) {
+        GameObject* go = new GameObject();
+        ptrComponent newComp = std::make_shared<LabelComponent>();
+        go->AddComponent(newComp);
+        gameobjects.push_back(go);
+    }
+
+
     //AudioManager::getInstance()->LoadBackgroundMusic("PowerfulMario.mp3");
     AudioManager::getInstance()->LoadBackgroundMusic("Slider.mp3");
     AudioManager::getInstance()->PlayBGM();
@@ -306,6 +331,7 @@ int main (int argc, char** argv) {
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
         AudioManager::getInstance()->Update();
+
         //UpdateMusicStream(m);
         UpdateCamera(&camera, CAMERA_FREE);
 
@@ -314,12 +340,20 @@ int main (int argc, char** argv) {
             if(gameObjects[i]->enabled)
                 gameObjects[i]->update();
 		}
+        
+        for (auto& go : gameobjects) {
+            go->Update(GetFrameTime());
+        }
 
 		// drawing
 		BeginDrawing();
 
-		// Setup the back buffer for drawing (clear color and depth buffers)
-		ClearBackground(LIGHTGRAY);
+        for (auto& go : gameobjects) {
+            go->Draw(GetFrameTime());
+        }
+        
+        // Setup the back buffer for drawing (clear color and depth buffers)
+		ClearBackground(RAYWHITE);
 
 		// draw some text using the default font
 		DrawText("Configuracion Cargada", 200,200,20,DARKGRAY);
@@ -356,7 +390,7 @@ int main (int argc, char** argv) {
 
 	// cleanup
 	// unload our texture so it can be cleaned up
-	UnloadTexture(wabbit);
+	//UnloadTexture(wabbit);
     //Carga de modelo y textura
 	//UnloadModel(model);
 	//UnloadTexture(texture);

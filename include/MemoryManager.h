@@ -8,6 +8,7 @@ public:
 	static MemoryManager* getInstance();
 
 	size_t alloc(size_t size);
+	void free(void* ptr);
 
 private:
 	static MemoryManager* instance;
@@ -16,5 +17,7 @@ private:
 	MemoryManager& operator=(const MemoryManager&) = delete;
 	MemoryManager();
 	~MemoryManager();
+
+	void init();
 };
 

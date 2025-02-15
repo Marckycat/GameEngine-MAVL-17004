@@ -5,6 +5,7 @@ unsigned int GameObject::nextId = 0;
 GameObject::GameObject()
 {
 	name = "GameObject";
+	enabled = true;
 	id = 0;
 }
 
@@ -69,4 +70,33 @@ GameObject* GameObject::Spawn(Vector2 pos, Vector2 vel, std::string _name)
 	nextId++;
 	std::cout << "Objeto Creado" << obj->id << ":" << obj->name << std::endl;
 	return obj;
+}
+
+void GameObject::Start()
+{
+}
+
+void GameObject::Update(float deltaTime)
+{
+	for (auto& comp : components) {
+		comp->Update(deltaTime);
+	}
+}
+
+void GameObject::Draw(float deltaTime)
+{
+	for (auto& comp : components) {
+		if (comp->ShouldDraw()) {
+			comp->Draw(deltaTime);
+		}
+	}
+}
+
+void GameObject::AddComponent(ptrComponent newComp)
+{
+	components.push_back(newComp);
+}
+
+void GameObject::RemoveComponent()
+{
 }
