@@ -37,6 +37,10 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include <vector>
 
+extern "C" {
+#include "md5.h"
+}
+
 void DownloadAvatar() {
     char command[512];
     snprintf(command, sizeof(command), "curl -s -o %s %s", AVATAR_FILE, AVATAR_URL);
@@ -194,6 +198,20 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
 }
 
 int main (int argc, char** argv) {
+    //Prueba de md5
+    char* input = "hola mundo";
+    uint8_t result[16];
+    md5String(input, result);
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", result[i]);
+    }
+    char hash[33];
+    for (int i = 0; i < 16; i++) {
+        sprintf(&hash[i * 2], "%02x", (unsigned int)result[i]);
+    }
+    puts("");
+    std::cout << hash << std::endl;
+
     //Pruebas del Component
     auto now = std::chrono::system_clock::now();
     auto nowc = std::chrono::system_clock::to_time_t(now);
