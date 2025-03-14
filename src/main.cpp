@@ -21,6 +21,8 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "LabelComponent.h"
 #include "ConfigManager.h"
 #include "LogManager.h"
+
+#include <lua.hpp>
 //
 #include <stdarg.h>
 #include <string.h>
@@ -38,6 +40,79 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 
 extern "C" {
 #include "md5.h"
+}
+
+//Variables globales para Raylib
+Color brushColor = WHITE;
+
+//Funciones expuestas a Lua
+int Clear(lua_State* L) {
+	int r = (int)lua_tonumber(L, 1);
+	int g = (int)lua_tonumber(L, 2);
+	int b = (int)lua_tonumber(L, 3);
+    ClearBackground(Color{ static_cast<unsigned char>(r), 
+        static_cast<unsigned char>(g), static_cast<unsigned char>(b), 255 });
+	return 0;
+}
+
+int SetBrushColor(lua_State* L) {
+    int r = (int)lua_tonumber(L, 1);
+    int g = (int)lua_tonumber(L, 2);
+    int b = (int)lua_tonumber(L, 3);
+    brushColor = (Color{ static_cast<unsigned char>(r),
+        static_cast<unsigned char>(g), static_cast<unsigned char>(b), 255 });
+    return 0;
+}
+
+int DrawCircle(lua_State* L) {
+	int x = (int)lua_tonumber(L, 1);
+	int y = (int)lua_tonumber(L, 2);
+	int radius = (float)lua_tonumber(L, 3);
+	DrawCircle((int)x, (int)y, radius, brushColor);
+	return 0;
+}
+
+int DrawRect(lua_State* L) {
+	int x = (float)lua_tonumber(L, 1);
+	int y = (float)lua_tonumber(L, 2);
+	int width = (float)lua_tonumber(L, 3);
+	int height = (float)lua_tonumber(L, 4);
+	DrawRectangle((int)x, (int)y, (int)width, (int)height, brushColor);
+	return 0;
+}
+
+int DrawLine(lua_State* L) {
+	int x1 = (float)lua_tonumber(L, 1);
+	int y1 = (float)lua_tonumber(L, 2);
+	int x2 = (float)lua_tonumber(L, 3);
+	int y2 = (float)lua_tonumber(L, 4);
+	DrawLine((int)x1, (int)y1, (int)x2, (int)y2, brushColor);
+	return 0;
+}
+
+//Biblioteca de funciones para Lua
+int lua_mymodule(lua_State* L) {
+	static const luaL_Reg myModule[] = {
+		{"Clear", Clear},
+		{"SetBrushColor", SetBrushColor},
+		{"DrawCircle", DrawCircle},
+		{"DrawRect", DrawRect},
+		{"DrawLine", DrawLine},
+		{NULL, NULL}
+	};
+    luaL_newlib(L, myModule);
+	return 1;
+}
+
+//Ejecuta la funcion Draw() de Lua
+void luaDraw(lua_State* L, float dt) {
+	lua_getglobal(L, "Draw");
+    if (lua_isfunction(L, -1)) {
+        lua_pushnumber(L, dt);
+        if (lua_pcall(L, 1, 0, 0) != 0) {
+            std::cout << "Error en Draw(): " << lua_tostring(L, 1) << std::endl;
+        }
+    }
 }
 
 void DownloadAvatar() {
@@ -272,9 +347,17 @@ int main (int argc, char** argv) {
 
 	// Create the window and OpenGL context
 	//InitWindow(resX, resY, "Hello Raylib");
-    //InitWindow(config.resX, config.resY, "Hello Raylib");
-    InitWindow(1280, 800, "HelloRaylib");
+    InitWindow(config.resX, config.resY, "Hello Raylib");
 
+    //Incializar Lua
+	lua_State* L = luaL_newstate();
+    luaL_openlibs(L);
+    luaL_requiref(L, "SimpleDraw", lua_mymodule, 1);
+    lua_pop(L, 1);
+
+    if (luaL_dofile(L, "main.lua")) {
+        std::cout << "Error en Draw(): " << lua_tostring(L, -1) << std::endl;
+    }
 
     //Prueba de GameObject
     /*GameObject* myObj = new GameObject();
@@ -302,8 +385,8 @@ int main (int argc, char** argv) {
 
 	// Load a texture from the resources directory
 	//Texture wabbit = LoadTexture("wabbit_alpha.png");
-	//Texture cubeTex = LoadTexture("Tile.png");
-    Texture cubeT = LoadTexture("Skeleton.png");
+	Texture cubeTex = LoadTexture("Tile.png");
+    //Texture cubeT = LoadTexture("Skeleton.png");
 
     //Textura del avatar
     Image avatar = LoadImage(AVATAR_FILE);
@@ -377,8 +460,8 @@ int main (int argc, char** argv) {
 
 		BeginMode3D(camera);
 		//DrawCube((Vector3) { 0, 0, 0 }, 1, 1, 1, RED);
-        //DrawCubeTexture(cubeTex, { 0, 0, 0 }, 2, 2, 2, WHITE);
-        DrawCubeTexture(cubeT, { 0, 0, 0 }, 2, 2, 2, WHITE);
+        DrawCubeTexture(cubeTex, { 0, 0, 0 }, 2, 2, 2, WHITE);
+        //DrawCubeTexture(cubeT, { 0, 0, 0 }, 2, 2, 2, WHITE);
 
         //Dibuja el modelo y la posicion
 		//DrawModel(model, (Vector3) { 0, 0, 0 }, 1, WHITE);
@@ -401,6 +484,9 @@ int main (int argc, char** argv) {
 			gameObjects[i]->draw();
         }
 
+		//Llamar la funcion Draw() de Lua
+        luaDraw(L, GetFrameTime()); 
+
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
 	}
@@ -408,12 +494,17 @@ int main (int argc, char** argv) {
 	// cleanup
 	// unload our texture so it can be cleaned up
 	//UnloadTexture(wabbit);
+    
     //Carga de modelo y textura
 	//UnloadModel(model);
 	//UnloadTexture(texture);
+     
     //Carga del avatar
     UnloadTexture(avatarTexture);
      
+    //Cerrar Lua
+	lua_close(L);
+
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
 	return 0;
