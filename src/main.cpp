@@ -14,7 +14,6 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include <stdio.h>
 #include <iostream>
 //#include <fstream>
-//#include <curl/curl.h>
 
 #include "GameObject.h"
 #include "MemoryManager.h"
