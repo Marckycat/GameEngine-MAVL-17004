@@ -11,3 +11,5 @@ SimpleDraw.DrawLine(100,100,700,500)
 --SimpleDraw.SetBrushColor(255,255,0)
 --SimpleDraw.DrawCircle(400 + math.sin(os.clock()) * 100,300,50)
 end
+
+webRequest("https://uselessfacts.jsph.pl/api/v2/facts/random")

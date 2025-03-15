@@ -23,6 +23,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "LogManager.h"
 
 #include <lua.hpp>
+#include "WebRequest.h"
 //
 #include <stdarg.h>
 #include <string.h>
@@ -113,6 +114,21 @@ void luaDraw(lua_State* L, float dt) {
             std::cout << "Error en Draw(): " << lua_tostring(L, 1) << std::endl;
         }
     }
+}
+
+//Funcion que se ejecutara desde LUA
+static int print(lua_State* L) {
+    std::cout << "hola mundo desde lua" << std::endl;
+    return 0;
+    //std::cout << msg << std::endl;
+}
+
+//Funcion expuesta que recibe dos parametros y devuelve la suma
+static int suma(lua_State* L) {
+    float a = lua_tonumber(L, 1);
+    float b = lua_tonumber(L, 2);
+    lua_pushnumber(L, a + b);
+    return 1;
 }
 
 void DownloadAvatar() {
@@ -272,6 +288,7 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
 }
 
 int main (int argc, char** argv) {
+
     //Prueba de md5
     char* input = "hola mundo";
     uint8_t result[16];
@@ -354,9 +371,14 @@ int main (int argc, char** argv) {
     luaL_openlibs(L);
     luaL_requiref(L, "SimpleDraw", lua_mymodule, 1);
     lua_pop(L, 1);
+    //Resgistras funciones en lua
+	lua_pushcfunction(L, webRequest);
+	lua_setglobal(L, "webRequest");
 
+	//Cargar el script de Lua
     if (luaL_dofile(L, "main.lua")) {
         std::cout << "Error en Draw(): " << lua_tostring(L, -1) << std::endl;
+        std::cout << "Error al cargar el script" << std::endl;
     }
 
     //Prueba de GameObject
@@ -389,9 +411,9 @@ int main (int argc, char** argv) {
     //Texture cubeT = LoadTexture("Skeleton.png");
 
     //Textura del avatar
-    Image avatar = LoadImage(AVATAR_FILE);
+    /*Image avatar = LoadImage(AVATAR_FILE);
     Texture2D avatarTexture = LoadTextureFromImage(avatar);
-    UnloadImage(avatar);
+    UnloadImage(avatar);*/
 
 	////Modelo 3D
 	//Model model = LoadModel(modelPath);
@@ -456,7 +478,7 @@ int main (int argc, char** argv) {
 		ClearBackground(RAYWHITE);
 
 		// draw some text using the default font
-		DrawText("Configuracion Cargada", 200,200,20,DARKGRAY);
+		//DrawText("Configuracion Cargada", 200,200,20,DARKGRAY);
 
 		BeginMode3D(camera);
 		//DrawCube((Vector3) { 0, 0, 0 }, 1, 1, 1, RED);
@@ -467,7 +489,7 @@ int main (int argc, char** argv) {
 		//DrawModel(model, (Vector3) { 0, 0, 0 }, 1, WHITE);
         
         // Dibujar la marca de agua en la esquina inferior derecha
-        DrawTexture(avatarTexture, GetScreenWidth() - avatarTexture.width - 10, GetScreenHeight() - avatarTexture.height - 10, WHITE);
+        //DrawTexture(avatarTexture, GetScreenWidth() - avatarTexture.width - 10, GetScreenHeight() - avatarTexture.height - 10, WHITE);
 
 		DrawGrid(20, 1);
 
@@ -500,7 +522,7 @@ int main (int argc, char** argv) {
 	//UnloadTexture(texture);
      
     //Carga del avatar
-    UnloadTexture(avatarTexture);
+    //UnloadTexture(avatarTexture);
      
     //Cerrar Lua
 	lua_close(L);
